@@ -232,6 +232,12 @@ rb_strhash_s_create(int argc, VALUE *argv, VALUE klass)
 }
 
 static VALUE
+rb_strhash_strhash(VALUE hash)
+{
+	return hash;
+}
+
+static VALUE
 rb_hash_strhash(VALUE hash)
 {
 	VALUE args[1];
@@ -276,6 +282,7 @@ Init_hwia()
 	rb_define_method(rb_cString, "strhash", rb_str_strhash_m, 0);
 	rb_define_method(rb_cSymbol, "strhash", rb_sym_strhash_m, 0);
 	rb_define_method(rb_cStrHash, "rehash", rb_strhash_rehash, 0);
+	rb_define_method(rb_cStrHash, "strhash", rb_strhash_strhash, 0);	
 	rb_define_method(rb_cStrHash, "convert", rb_strhash_convert, 1);	
 	rb_define_method(rb_cHash, "strhash", rb_hash_strhash, 0);
 }	

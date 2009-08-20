@@ -31,6 +31,10 @@ class TestStrHash < Test::Unit::TestCase
     @fixnums = {  0  => 1,  1  => 2 }.strhash
   end
   
+  def test_strhash
+    assert_equal @strings.object_id, @strings.strhash.object_id
+  end
+  
   def test_convert
     assert_equal 'a', @strings.convert('a')
     hash = { 'a' => 1, 'b' => 2 }
