@@ -318,6 +318,18 @@ rb_strhash_update(VALUE hash1, VALUE hash2)
     return hash1;
 }
 
+static VALUE
+rb_strhash_initialize(int argc, VALUE *argv, VALUE hash){
+	VALUE constructor;
+	rb_scan_args(argc, argv, "01", &constructor);
+	if(TYPE(constructor) == T_HASH){
+		rb_strhash_update(hash,constructor);
+		rb_call_super(argc,argv);
+	}else{
+		rb_call_super(argc,argv);
+	}		
+}
+
 void
 Init_hwia()
 {
@@ -332,6 +344,8 @@ Init_hwia()
   
     rb_define_method(rb_cString, "strhash", rb_str_strhash_m, 0);
     rb_define_method(rb_cSymbol, "strhash", rb_sym_strhash_m, 0);
+
+    rb_define_method(rb_cStrHash,"initialize", rb_strhash_initialize, -1); 
     rb_define_method(rb_cStrHash, "rehash", rb_strhash_rehash, 0);
     rb_define_method(rb_cStrHash, "strhash", rb_strhash_strhash, 0);
     rb_define_method(rb_cStrHash, "convert", rb_strhash_convert, 1);

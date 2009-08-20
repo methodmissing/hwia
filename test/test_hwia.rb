@@ -35,6 +35,14 @@ class TestStrHash < Test::Unit::TestCase
     assert_equal @strings.object_id, @strings.strhash.object_id
   end
   
+  def test_initialize
+    strhash = StrHash.new({ 'a' => 1, 'b' => 2 })
+    assert_equal 1, strhash[:a] 
+    strhash = StrHash.new
+    strhash[:a] = 'a'
+    assert_equal 'a', strhash[:a]
+  end
+  
   def test_convert
     assert_equal 'a', @strings.convert('a')
     hash = { 'a' => 1, 'b' => 2 }
