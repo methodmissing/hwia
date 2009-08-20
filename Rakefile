@@ -60,3 +60,8 @@ end
 
 desc "clean build install"
 task :setup => %w(clean build install)
+
+desc "run benchmarks"
+task :bench do
+  sh "ruby bench/bench.rb"
+end
