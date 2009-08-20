@@ -245,6 +245,7 @@ rb_hash_strhash(VALUE hash)
 	return rb_strhash_s_create(1, (VALUE *)args, rb_cStrHash );
 }
 
+/* temp. public API */
 static VALUE
 rb_strhash_convert(VALUE hash, VALUE val)
 {
@@ -267,22 +268,76 @@ rb_strhash_convert(VALUE hash, VALUE val)
     }
 }
 
+static VALUE
+rb_strhash_aset(VALUE hash, VALUE key, VALUE val){
+	VALUE converted = rb_strhash_convert(hash,val);
+	rb_hash_aset(hash, key, converted);
+	return converted;
+}
+
+/* hash.c */
+static VALUE
+to_strhash(hash)
+    VALUE hash;
+{
+    return rb_convert_type(hash, T_HASH, "StrHash", "to_hash");
+}
+
+/* hash.c */
+static int
+rb_strhash_update_i(VALUE key, VALUE value, VALUE hash)
+{
+    if (key == Qundef) return ST_CONTINUE;
+    rb_strhash_aset(hash, key, value);
+    return ST_CONTINUE;
+}
+
+/* hash.c */
+static int
+rb_strhash_update_block_i(VALUE key, VALUE value, VALUE hash)
+{
+    if (key == Qundef) return ST_CONTINUE;
+    if (rb_hash_has_key(hash, key)) {
+	value = rb_yield_values(3, key, rb_hash_aref(hash, key), value);
+    }
+    rb_strhash_aset(hash, key, value);
+    return ST_CONTINUE;
+}
+
+/* hash.c */
+static VALUE
+rb_strhash_update(VALUE hash1, VALUE hash2)
+{
+    hash2 = to_strhash(hash2);
+    if (rb_block_given_p()) {
+	rb_hash_foreach(hash2, rb_strhash_update_block_i, hash1);
+    }
+    else {
+	rb_hash_foreach(hash2, rb_strhash_update_i, hash1);
+    }
+    return hash1;
+}
+
 void
 Init_hwia()
 {
-	id_hash = rb_intern("hash");
-	id_strhash = rb_intern("strhash");
-	
-	rb_cStrHash = rb_define_class("StrHash", rb_cHash);
+    id_hash = rb_intern("hash");
+    id_strhash = rb_intern("strhash");
 
-	rb_undef_alloc_func(rb_cStrHash);
-	rb_define_alloc_func(rb_cStrHash, strhash_alloc);
-	rb_define_singleton_method(rb_cStrHash, "[]", rb_strhash_s_create, -1);
-	
-	rb_define_method(rb_cString, "strhash", rb_str_strhash_m, 0);
-	rb_define_method(rb_cSymbol, "strhash", rb_sym_strhash_m, 0);
-	rb_define_method(rb_cStrHash, "rehash", rb_strhash_rehash, 0);
-	rb_define_method(rb_cStrHash, "strhash", rb_strhash_strhash, 0);	
-	rb_define_method(rb_cStrHash, "convert", rb_strhash_convert, 1);	
-	rb_define_method(rb_cHash, "strhash", rb_hash_strhash, 0);
+    rb_cStrHash = rb_define_class("StrHash", rb_cHash);
+
+    rb_undef_alloc_func(rb_cStrHash);
+    rb_define_alloc_func(rb_cStrHash, strhash_alloc);
+    rb_define_singleton_method(rb_cStrHash, "[]", rb_strhash_s_create, -1);
+  
+    rb_define_method(rb_cString, "strhash", rb_str_strhash_m, 0);
+    rb_define_method(rb_cSymbol, "strhash", rb_sym_strhash_m, 0);
+    rb_define_method(rb_cStrHash, "rehash", rb_strhash_rehash, 0);
+    rb_define_method(rb_cStrHash, "strhash", rb_strhash_strhash, 0);
+    rb_define_method(rb_cStrHash, "convert", rb_strhash_convert, 1);
+    rb_define_method(rb_cStrHash,"[]=", rb_strhash_aset, 2);
+    rb_define_method(rb_cStrHash,"store", rb_strhash_aset, 2);
+    rb_define_method(rb_cStrHash,"update", rb_strhash_update, 1);
+    rb_define_method(rb_cStrHash,"merge!", rb_strhash_update, 1);
+    rb_define_method(rb_cHash, "strhash", rb_hash_strhash, 0);
 }	
