@@ -7,7 +7,7 @@
 
 VALUE rb_cStrHash;
 
-static ID id_strhash_hash, id_hash;
+static ID id_strhash, id_hash;
 
 #ifndef RSTRING_PTR
 #define RSTRING_PTR(obj) RSTRING(obj)->ptr
@@ -235,7 +235,7 @@ void
 Init_hwia()
 {
 	id_hash = rb_intern("hash");
-	id_strhash_hash = rb_intern("strhash_hash");
+	id_strhash = rb_intern("strhash");
 	
 	rb_cStrHash = rb_define_class("StrHash", rb_cHash);
 

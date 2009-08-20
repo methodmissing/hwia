@@ -25,10 +25,10 @@ end
 
 class TestStrHash < Test::Unit::TestCase
   def setup
-    @strings = StrHash[ 'a' => 1, 'b' => 2 ]
-    @symbols = StrHash[ :a  => 1, :b  => 2 ]
-    @mixed   = StrHash[ :a  => 1, 'b' => 2 ]
-    @fixnums = StrHash[  0  => 1,  1  => 2 ]
+    @strings = { 'a' => 1, 'b' => 2 }.strhash
+    @symbols = { :a  => 1, :b  => 2 }.strhash
+    @mixed   = { :a  => 1, 'b' => 2 }.strhash
+    @fixnums = {  0  => 1,  1  => 2 }.strhash
   end
   
   def test_inherits_hash
@@ -53,6 +53,17 @@ class TestStrHash < Test::Unit::TestCase
     assert_equal 1, @strings.fetch('a')
     assert_equal 1, @strings.fetch(:a.to_s)
     assert_equal 1, @strings.fetch(:a)
+  end
+  
+  def test_key?
+    assert @strings.key?(:a)
+    assert @strings.include?('a')
+    assert @mixed.has_key?('b')
+  end
+  
+  def test_delete
+    @strings.delete('a')
+    assert !@strings.key?(:a)
   end
   
   def test_assorted
