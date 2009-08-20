@@ -10,20 +10,29 @@ class TestSymbolAndStringHash < Test::Unit::TestCase
   
   private
   def assert_hash_keys(str,sym)
-    assert_equal str.hwia_hash, sym.hwia_hash
+    assert_equal str.strhash, sym.strhash
   end  
 end
 
-class TestHashWithIndifferentAccess < Test::Unit::TestCase
+class HashToStrHash < Test::Unit::TestCase
+  def test_strhash
+    hash = { 'a' => 1, 'b' => 2 }
+    assert_instance_of StrHash, hash.strhash
+    assert_equal %w(a b), hash.keys
+    assert_equal [1,2], hash.values
+  end  
+end
+
+class TestStrHash < Test::Unit::TestCase
   def setup
-    @strings = HashWithIndifferentAccess[ 'a' => 1, 'b' => 2 ]
-    @symbols = HashWithIndifferentAccess[ :a  => 1, :b  => 2 ]
-    @mixed   = HashWithIndifferentAccess[ :a  => 1, 'b' => 2 ]
-    @fixnums = HashWithIndifferentAccess[  0  => 1,  1  => 2 ]
+    @strings = StrHash[ 'a' => 1, 'b' => 2 ]
+    @symbols = StrHash[ :a  => 1, :b  => 2 ]
+    @mixed   = StrHash[ :a  => 1, 'b' => 2 ]
+    @fixnums = StrHash[  0  => 1,  1  => 2 ]
   end
   
   def test_inherits_hash
-    assert_equal Hash, HashWithIndifferentAccess.superclass
+    assert_equal Hash, StrHash.superclass
   end  
   
   def test_keys
@@ -70,7 +79,7 @@ class TestHashWithIndifferentAccess < Test::Unit::TestCase
   end
   
   def test_reading
-    hash = HashWithIndifferentAccess.new
+    hash = StrHash.new
     hash["a"] = 1
     hash["b"] = true
     hash["c"] = false
@@ -84,7 +93,7 @@ class TestHashWithIndifferentAccess < Test::Unit::TestCase
   end  
   
   def test_reading_with_nonnil_default
-    hash = HashWithIndifferentAccess.new(1)
+    hash = StrHash.new(1)
     hash["a"] = 1
     hash["b"] = true
     hash["c"] = false
@@ -98,7 +107,7 @@ class TestHashWithIndifferentAccess < Test::Unit::TestCase
   end  
 
   def test_writing
-    hash = HashWithIndifferentAccess.new
+    hash = StrHash.new
     hash[:a] = 1
     hash['b'] = 2
     hash[3] = 3
@@ -111,7 +120,7 @@ class TestHashWithIndifferentAccess < Test::Unit::TestCase
   end  
 
   def test_update
-    hash = HashWithIndifferentAccess.new
+    hash = StrHash.new
     hash[:a] = 'a'
     hash['b'] = 'b'
 
@@ -134,7 +143,7 @@ class TestHashWithIndifferentAccess < Test::Unit::TestCase
   end  
   
   def test_merging
-    hash = HashWithIndifferentAccess.new
+    hash = StrHash.new
     hash[:a] = 'failure'
     hash['b'] = 'failure'
 
@@ -142,7 +151,7 @@ class TestHashWithIndifferentAccess < Test::Unit::TestCase
 
     merged = hash.merge(other)
 
-    assert_equal HashWithIndifferentAccess, merged.class
+    assert_equal StrHash, merged.class
     assert_equal 1, merged[:a]
     assert_equal 2, merged['b']
 
@@ -153,7 +162,7 @@ class TestHashWithIndifferentAccess < Test::Unit::TestCase
   end  
   
   def test_deleting
-    get_hash = proc{ HashWithIndifferentAccess[ :a => 'foo' ] }
+    get_hash = proc{ StrHash[ :a => 'foo' ] }
     hash = get_hash.call
     assert_equal hash.delete(:a), 'foo'
     assert_equal hash.delete(:a), nil
@@ -161,14 +170,13 @@ class TestHashWithIndifferentAccess < Test::Unit::TestCase
     assert_equal hash.delete('a'), 'foo'
     assert_equal hash.delete('a'), nil
   end  
-
-=begin  
+=begin 
   def test_hash_with_array_of_hashes
     hash = { "urls" => { "url" => [ { "address" => "1" }, { "address" => "2" } ] }}
-    hwia = HashWithIndifferentAccess[hash]
+    hwia = StrHash[hash]
     assert_equal "1", hwia[:urls][:url].first[:address]
   end
-  
+     
   def test_indifferent_subhashes
     h = {'user' => {'id' => 5}}.with_indifferent_access
     ['user', :user].each {|user| [:id, 'id'].each {|id| assert_equal 5, h[user][id], "h[#{user.inspect}][#{id.inspect}] should be 5"}}
@@ -176,43 +184,11 @@ class TestHashWithIndifferentAccess < Test::Unit::TestCase
     h = {:user => {:id => 5}}.with_indifferent_access
     ['user', :user].each {|user| [:id, 'id'].each {|id| assert_equal 5, h[user][id], "h[#{user.inspect}][#{id.inspect}] should be 5"}}
   end
-  
-  def test_indifferent_slice
-    original = { :a => 'x', :b => 'y', :c => 10 }.with_indifferent_access
-    expected = { :a => 'x', :b => 'y' }.with_indifferent_access
-
-    [['a', 'b'], [:a, :b]].each do |keys|
-      # Should return a new hash with only the given keys.
-      assert_equal expected, original.slice(*keys), keys.inspect
-      assert_not_equal expected, original
-    end
-  end
-
-  def test_indifferent_slice_inplace
-    original = { :a => 'x', :b => 'y', :c => 10 }.with_indifferent_access
-    expected = { :c => 10 }.with_indifferent_access
-
-    [['a', 'b'], [:a, :b]].each do |keys|
-      # Should replace the hash with only the given keys.
-      copy = original.dup
-      assert_equal expected, copy.slice!(*keys)
-    end
-  end
-
-  def test_indifferent_slice_access_with_symbols
-    original = {'login' => 'bender', 'password' => 'shiny', 'stuff' => 'foo'}
-    original = original.with_indifferent_access
-
-    slice = original.slice(:login, :password)
-
-    assert_equal 'bender', slice[:login]
-    assert_equal 'bender', slice['login']
-  end
-  
+   
   def test_should_copy_the_default_value_when_converting_to_hash_with_indifferent_access
     hash = Hash.new(3)
-    hash_wia = hash.with_indifferent_access
+    hash_wia = StrHash[hash]
     assert_equal 3, hash_wia.default
   end    
-=end    
+=end   
 end
