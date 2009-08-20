@@ -17,6 +17,14 @@ static ID id_strhash, id_hash;
 #define RSTRING_LEN(obj) RSTRING(obj)->len
 #endif
 
+#ifndef RARRAY_PTR
+#define RARRAY_PTR(obj) RARRAY(obj)->ptr
+#endif
+ 
+#ifndef RARRAY_LEN
+#define RARRAY_LEN(obj) RARRAY(obj)->len
+#endif
+
 /* hash.c */
 static void
 rb_hash_modify(VALUE hash)
@@ -231,6 +239,28 @@ rb_hash_strhash(VALUE hash)
 	return rb_strhash_s_create(1, (VALUE *)args, rb_cStrHash );
 }
 
+static VALUE
+rb_strhash_convert(VALUE hash, VALUE val)
+{
+	int i;
+	VALUE values;
+    switch (TYPE(val)) {
+      case T_HASH:
+           return rb_hash_strhash(val);    
+           break; 
+      case T_ARRAY:
+            values = rb_ary_new2(RARRAY(val)->len);
+            for (i = 0; i < RARRAY(val)->len; i++) {
+               VALUE el = RARRAY(val)->ptr[i];
+               rb_ary_push(values, (TYPE(el) == T_HASH) ? rb_hash_strhash(el) : el);
+            } 
+            return values;
+           break;
+      default:
+           return val;
+    }
+}
+
 void
 Init_hwia()
 {
@@ -246,5 +276,6 @@ Init_hwia()
 	rb_define_method(rb_cString, "strhash", rb_str_strhash_m, 0);
 	rb_define_method(rb_cSymbol, "strhash", rb_sym_strhash_m, 0);
 	rb_define_method(rb_cStrHash, "rehash", rb_strhash_rehash, 0);
+	rb_define_method(rb_cStrHash, "convert", rb_strhash_convert, 1);	
 	rb_define_method(rb_cHash, "strhash", rb_hash_strhash, 0);
 }	

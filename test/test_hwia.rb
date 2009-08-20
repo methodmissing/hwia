@@ -31,6 +31,17 @@ class TestStrHash < Test::Unit::TestCase
     @fixnums = {  0  => 1,  1  => 2 }.strhash
   end
   
+  def test_convert
+    assert_equal 'a', @strings.convert('a')
+    hash = { 'a' => 1, 'b' => 2 }
+    assert_instance_of StrHash, @strings.convert(hash)
+    assert_equal %w(a b), @strings.convert(hash).keys
+    assert_equal [:a,:b,:c], @strings.convert([:a,:b,:c])
+    array_with_hash = [{ 'a' => 1, 'b' => 2 }, [:a,:b,:c]]
+    assert_instance_of StrHash, @strings.convert(array_with_hash).shift   
+    assert_equal [:a,:b,:c], @strings.convert(array_with_hash).pop 
+  end
+  
   def test_inherits_hash
     assert_equal Hash, StrHash.superclass
   end  
