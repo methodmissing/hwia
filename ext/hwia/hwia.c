@@ -26,6 +26,12 @@ static VALUE hash_format;
 #define RARRAY_LEN(obj) RARRAY(obj)->heap.len
 #endif
 
+#ifdef RUBY19
+#define HASH_TBL(obj) RHASH(obj)->ntbl
+#else
+#define HASH_TBL(obj) RHASH(obj)->tbl
+#endif
+
 static int 
 strhash(register const char *string)
 {
@@ -180,13 +186,13 @@ static void
 rb_hash_modify(VALUE hash)
 {
 #ifdef RUBY18	
-    if (!RHASH(hash)->tbl) rb_raise(rb_eTypeError, "uninitialized Hash");
+    if (!HASH_TBL(hash)) rb_raise(rb_eTypeError, "uninitialized Hash");
 #endif
     if (OBJ_FROZEN(hash)) rb_error_frozen("hash");
     if (!OBJ_TAINTED(hash) && rb_safe_level() >= 4)
 	rb_raise(rb_eSecurityError, "Insecure: can't modify hash");
 #ifdef RUBY19
-   if (!RHASH(hash)->ntbl) RHASH(hash)->ntbl = st_init_table(&objstrhash);
+   if (!HASH_TBL(hash)) HASH_TBL(hash) = st_init_table(&objstrhash);
 #endif
 }
 
@@ -209,7 +215,7 @@ strhash_alloc(VALUE klass)
 {
     VALUE hash = strhash_alloc0(klass);
 
-    RHASH(hash)->tbl = st_init_table(&objstrhash);
+    HASH_TBL(hash) = st_init_table(&objstrhash);
 
     return hash;
 }
@@ -235,10 +241,10 @@ rb_strhash_rehash(VALUE hash)
     st_table *tbl;
 
     rb_hash_modify(hash);
-    tbl = st_init_table_with_size(&objstrhash, RHASH(hash)->tbl->num_entries);
+    tbl = st_init_table_with_size(&objstrhash, HASH_TBL(hash)->num_entries);
     rb_hash_foreach(hash, rb_hash_rehash_i, (st_data_t)tbl);
-    st_free_table(RHASH(hash)->tbl);
-    RHASH(hash)->tbl = tbl;
+    st_free_table(HASH_TBL(hash));
+    HASH_TBL(hash) = tbl;
 
     return hash;
 }
@@ -252,8 +258,8 @@ rb_strhash_s_create(int argc, VALUE *argv, VALUE klass)
 
     if (argc == 1 && TYPE(argv[0]) == T_HASH) {
 	hash = strhash_alloc0(klass);
-	RHASH(hash)->tbl = st_copy(RHASH(argv[0])->tbl);
-	RHASH(hash)->tbl->type = &objstrhash;
+	HASH_TBL(hash) = st_copy(HASH_TBL(argv[0]));
+	HASH_TBL(hash)->type = &objstrhash;
 	return rb_strhash_rehash(hash);
     }
 
