@@ -8,6 +8,7 @@
 VALUE rb_cStrHash;
 
 static ID id_strhash, id_hash;
+static VALUE hash_format;
 
 #ifndef RSTRING_PTR
 #define RSTRING_PTR(obj) RSTRING(obj)->ptr
@@ -92,8 +93,9 @@ eql(args)
 static int
 rb_strhash_hash_cmp(VALUE a, VALUE b)
 {
+#ifdef RUBY18	
     VALUE args[2];
-
+#endif
     if (a == b) return 0;
     if (FIXNUM_P(a) && FIXNUM_P(b)) {
 	return a != b;
@@ -109,42 +111,73 @@ rb_strhash_hash_cmp(VALUE a, VALUE b)
     if (SYMBOL_P(a) && SYMBOL_P(b)) {
 	return a != b;
     }
-
+#ifdef RUBY18
     args[0] = a;
     args[1] = b;
     return !rb_with_disable_interrupt(eql, (VALUE)args);
+#else
+    return !rb_eql(a, b);
+#endif
 }
 
 VALUE
 rb_strhash(VALUE obj)
 {
-    return rb_funcall(obj, id_hash, 0);
+    VALUE hval = rb_funcall(obj, id_hash, 0);
+#ifdef RUBY18
+	return hval; 
+#else	
+ retry:
+    switch (TYPE(hval)) {
+      case T_FIXNUM:
+	return hval;
+
+      case T_BIGNUM:
+	return LONG2FIX(((long*)(RBIGNUM_DIGITS(hval)))[0]);
+
+      default:
+	hval = rb_to_int(hval);
+	goto retry;
+    }
+#endif
 }
 
 /* hash.c */
 static int
 rb_strhash_hash(VALUE a)
 {
-    VALUE hval;
+    VALUE hval, hnum;
 
     switch (TYPE(a)) {
       case T_FIXNUM:
-	return (int)a;    
-      case T_SYMBOL:
-	return rb_sym_strhash(a);
+#ifdef RUBY18
+	return (int)a;  
+#else
+    hnum = a;
+#endif	  
 	break;
-
+      case T_SYMBOL:
+	hnum = rb_sym_strhash_m(a);
+	break;
       case T_STRING:
-	return rb_str_strhash(a);
+	hnum = rb_str_strhash_m(a);
 	break;
 
       default:
-	hval = rb_funcall(a, id_hash, 0);
+	hval = rb_hash(a);
+#ifdef RUBY18
 	if (!FIXNUM_P(hval)) {
-	    hval = rb_funcall(hval, '%', 1, INT2FIX(536870923));
+	    hval = rb_funcall(hval, '%', 1, hash_format);
 	}
-	return (int)FIX2LONG(hval);
+#endif	
+	hnum = FIX2LONG(hval);
     }
+#ifdef RUBY18
+    return (int)hnum;
+#else
+    hnum <<= 1;
+    return (int)RSHIFT(hnum, 1);
+#endif
 }
 
 static struct st_hash_type objstrhash = {
@@ -327,7 +360,8 @@ rb_strhash_initialize(int argc, VALUE *argv, VALUE hash){
 		rb_call_super(argc,argv);
 	}else{
 		rb_call_super(argc,argv);
-	}		
+	}
+	return hash;		
 }
 
 void
@@ -335,6 +369,7 @@ Init_hwia()
 {
     id_hash = rb_intern("hash");
     id_strhash = rb_intern("strhash");
+	hash_format = INT2FIX(536870923);
 
     rb_cStrHash = rb_define_class("StrHash", rb_cHash);
 
@@ -349,9 +384,9 @@ Init_hwia()
     rb_define_method(rb_cStrHash, "rehash", rb_strhash_rehash, 0);
     rb_define_method(rb_cStrHash, "strhash", rb_strhash_strhash, 0);
     rb_define_method(rb_cStrHash, "convert", rb_strhash_convert, 1);
-    rb_define_method(rb_cStrHash,"[]=", rb_strhash_aset, 2);
-    rb_define_method(rb_cStrHash,"store", rb_strhash_aset, 2);
-    rb_define_method(rb_cStrHash,"update", rb_strhash_update, 1);
-    rb_define_method(rb_cStrHash,"merge!", rb_strhash_update, 1);
+    rb_define_method(rb_cStrHash, "[]=", rb_strhash_aset, 2);
+    rb_define_method(rb_cStrHash, "store", rb_strhash_aset, 2);
+    rb_define_method(rb_cStrHash, "update", rb_strhash_update, 1);
+    rb_define_method(rb_cStrHash, "merge!", rb_strhash_update, 1);
     rb_define_method(rb_cHash, "strhash", rb_hash_strhash, 0);
 }	
