@@ -354,6 +354,9 @@ rb_strhash_update_block_i(VALUE key, VALUE value, VALUE hash)
 static VALUE
 rb_strhash_update(VALUE hash1, VALUE hash2)
 {
+#ifdef RUBY19	
+	rb_hash_modify(hash1);
+#endif
     hash2 = to_strhash(hash2);
     if (rb_block_given_p()) {
 	rb_hash_foreach(hash2, rb_strhash_update_block_i, hash1);
