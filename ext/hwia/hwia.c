@@ -380,6 +380,13 @@ rb_strhash_initialize(int argc, VALUE *argv, VALUE hash){
 	return hash;		
 }
 
+static VALUE
+rb_strhash_merge(VALUE hash1, VALUE hash2){
+	/* see note in Init */
+	VALUE duped = rb_hash_strhash(hash1);
+	return rb_strhash_update(hash1,hash2);
+}
+
 void
 Init_hwia()
 {
@@ -406,5 +413,6 @@ Init_hwia()
     rb_define_method(rb_cStrHash, "store", rb_strhash_aset, 2);
     rb_define_method(rb_cStrHash, "update", rb_strhash_update, 1);
     rb_define_method(rb_cStrHash, "merge!", rb_strhash_update, 1);
+    rb_define_method(rb_cStrHash, "merge", rb_strhash_merge, 1);
     rb_define_method(rb_cHash, "strhash", rb_hash_strhash, 0);
 }	
