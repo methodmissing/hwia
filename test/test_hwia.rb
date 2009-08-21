@@ -62,6 +62,12 @@ class TestStrHash < Test::Unit::TestCase
     assert_instance_of StrHash, @strings[:hash] = { 'a' => 1, 'b' => 2 }
   end
   
+  def test_dup
+    assert_equal @strings, @strings.dup
+    assert_equal @mixed, @mixed.dup
+    assert_not_equal @mixed.object_id, @mixed.dup.object_id
+  end
+  
   def test_inherits_hash
     assert_equal Hash, StrHash.superclass
   end  
