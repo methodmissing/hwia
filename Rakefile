@@ -65,3 +65,4 @@ desc "run benchmarks"
 task :bench do
   sh "ruby bench/bench.rb"
 end
+task :bench => :build
