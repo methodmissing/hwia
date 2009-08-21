@@ -78,12 +78,14 @@ rb_strhash_cmp(VALUE s1,VALUE s2)
 	return -1;	
 }
 
+/* hash.c */
+#ifdef RUBY18
 static VALUE
-eql(args)
-    VALUE *args;
+eql(VALUE *args)
 {
     return (VALUE)rb_eql(args[0], args[1]);
 }
+#endif
 
 /* hash.c */
 static int
@@ -332,7 +334,7 @@ static int
 rb_strhash_update_i(VALUE key, VALUE value, VALUE hash)
 {
     if (key == Qundef) return ST_CONTINUE;
-    rb_strhash_aset(hash, key, value);
+    st_insert(HASH_TBL(hash), key, value);
     return ST_CONTINUE;
 }
 
@@ -344,7 +346,7 @@ rb_strhash_update_block_i(VALUE key, VALUE value, VALUE hash)
     if (rb_hash_has_key(hash, key)) {
 	value = rb_yield_values(3, key, rb_hash_aref(hash, key), value);
     }
-    rb_strhash_aset(hash, key, value);
+    st_insert(HASH_TBL(hash), key, value);
     return ST_CONTINUE;
 }
 
