@@ -1,7 +1,7 @@
 #include "ruby.h"
-#ifndef RUBY18
+#ifdef RUBY19
 #include "ruby/st.h"
-#elif
+#else
 #include "st.h"
 #endif
 
@@ -19,22 +19,12 @@ static VALUE hash_format;
 #endif
 
 #ifndef RARRAY_PTR
-#define RARRAY_PTR(obj) RARRAY(obj)->ptr
+#define RARRAY_PTR(obj) RARRAY(obj)->heap.ptr
 #endif
  
 #ifndef RARRAY_LEN
-#define RARRAY_LEN(obj) RARRAY(obj)->len
+#define RARRAY_LEN(obj) RARRAY(obj)->heap.len
 #endif
-
-/* hash.c */
-static void
-rb_hash_modify(VALUE hash)
-{
-    if (!RHASH(hash)->tbl) rb_raise(rb_eTypeError, "uninitialized Hash");
-    if (OBJ_FROZEN(hash)) rb_error_frozen("hash");
-    if (!OBJ_TAINTED(hash) && rb_safe_level() >= 4)
-	rb_raise(rb_eSecurityError, "Insecure: can't modify hash");
-}
 
 static int 
 strhash(register const char *string)
@@ -185,6 +175,21 @@ static struct st_hash_type objstrhash = {
     rb_strhash_hash,
 };
 
+/* hash.c */
+static void
+rb_hash_modify(VALUE hash)
+{
+#ifdef RUBY18	
+    if (!RHASH(hash)->tbl) rb_raise(rb_eTypeError, "uninitialized Hash");
+#endif
+    if (OBJ_FROZEN(hash)) rb_error_frozen("hash");
+    if (!OBJ_TAINTED(hash) && rb_safe_level() >= 4)
+	rb_raise(rb_eSecurityError, "Insecure: can't modify hash");
+#ifdef RUBY19
+   if (!RHASH(hash)->ntbl) RHASH(hash)->ntbl = st_init_table(&objstrhash);
+#endif
+}
+
 static VALUE strhash_alloc0 _((VALUE));
 static VALUE strhash_alloc _((VALUE));
 /* hash.c */
@@ -289,9 +294,9 @@ rb_strhash_convert(VALUE hash, VALUE val)
            return rb_hash_strhash(val);    
            break; 
       case T_ARRAY:
-            values = rb_ary_new2(RARRAY(val)->len);
-            for (i = 0; i < RARRAY(val)->len; i++) {
-               VALUE el = RARRAY(val)->ptr[i];
+            values = rb_ary_new2(RARRAY_LEN(val));
+            for (i = 0; i < RARRAY_LEN(val); i++) {
+               VALUE el = RARRAY_PTR(val)[i];
                rb_ary_push(values, (TYPE(el) == T_HASH) ? rb_hash_strhash(el) : el);
             } 
             return values;
