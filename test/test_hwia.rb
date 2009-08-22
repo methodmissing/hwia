@@ -233,11 +233,10 @@ class TestStrHash < Test::Unit::TestCase
     h = {:user => {:id => 5}}.with_indifferent_access
     ['user', :user].each {|user| [:id, 'id'].each {|id| assert_equal 5, h[user][id], "h[#{user.inspect}][#{id.inspect}] should be 5"}}
   end
-   
+=end    
   def test_should_copy_the_default_value_when_converting_to_hash_with_indifferent_access
     hash = Hash.new(3)
-    hash_wia = StrHash[hash]
+    hash_wia = hash.strhash
     assert_equal 3, hash_wia.default
-  end    
-=end   
+  end      
 end

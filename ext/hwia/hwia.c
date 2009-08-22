@@ -262,6 +262,7 @@ rb_strhash_s_create(int argc, VALUE *argv, VALUE klass)
 	hash = strhash_alloc0(klass);
 	HASH_TBL(hash) = st_copy(HASH_TBL(argv[0]));
 	HASH_TBL(hash)->type = &objstrhash;
+	RHASH(hash)->ifnone = RHASH(argv[0])->ifnone;
 	return rb_strhash_rehash(hash);
     }
 
