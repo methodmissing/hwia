@@ -37,6 +37,7 @@ class TestStrHash < Test::Unit::TestCase
     
   def test_strhash
     assert_equal @strings.object_id, @strings.strhash.object_id
+    assert_instance_of StrHash, { 'a' => 1, 'b' => 2 }.strhash
   end
   
   def test_initialize
@@ -72,12 +73,6 @@ class TestStrHash < Test::Unit::TestCase
     assert_equal @strings, @strings.dup
     assert_equal @mixed, @mixed.dup
     assert_not_equal @mixed.object_id, @mixed.dup.object_id
-  end
-  
-  def test_to_hash
-    assert_instance_of Hash, @strings.to_hash
-    assert_equal %w(a b), @strings.to_hash.keys
-    assert_equal( { 'a' => 1, 'b' => 2 }, @strings.to_hash )
   end
     
   def test_keys
@@ -227,6 +222,20 @@ class TestStrHash < Test::Unit::TestCase
     assert_equal hash.delete('a'), nil
   end  
 
+  def test_to_hash
+    assert_instance_of Hash, @strings.to_hash
+    assert_equal %w(a b), @strings.to_hash.keys
+    # Should convert to a Hash with String keys.
+    assert_equal @strings, @mixed.strhash.to_hash
+
+    # Should preserve the default value.
+    mixed_with_default = @mixed.dup
+    mixed_with_default.default = '1234'
+    roundtrip = mixed_with_default.strhash.to_hash
+    assert_equal @strings, roundtrip
+    assert_equal '1234', roundtrip.default    
+  end
+
 =begin 
   def test_hash_with_array_of_hashes
     hash = { "urls" => { "url" => [ { "address" => "1" }, { "address" => "2" } ] }}
@@ -242,6 +251,28 @@ class TestStrHash < Test::Unit::TestCase
     ['user', :user].each {|user| [:id, 'id'].each {|id| assert_equal 5, h[user][id], "h[#{user.inspect}][#{id.inspect}] should be 5"}}
   end
 =end    
+
+  def test_assorted_keys_not_stringified
+    original = {Object.new => 2, 1 => 2, [] => true}
+    indiff = original.strhash
+    assert(!indiff.keys.any? {|k| k.kind_of? String}, "A key was converted to a string!")
+  end
+
+  def test_should_use_default_value_for_unknown_key
+    hash_wia = StrHash.new(3)
+    assert_equal 3, hash_wia[:new_key]
+  end
+
+  def test_should_use_default_value_if_no_key_is_supplied
+    hash_wia = StrHash.new(3)
+    assert_equal 3, hash_wia.default
+  end
+
+  def test_should_nil_if_no_default_value_is_supplied
+    hash_wia = StrHash.new
+    assert_nil hash_wia.default
+  end
+
   def test_should_copy_the_default_value_when_converting_to_hash_with_indifferent_access
     hash = Hash.new(3)
     hash_wia = hash.strhash

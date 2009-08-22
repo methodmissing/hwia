@@ -269,8 +269,9 @@ static VALUE rb_hash_strhash(VALUE hash);
 static VALUE
 rb_strhash_convert(VALUE hash, VALUE val)
 {
-	int i;
-	VALUE values;
+    int i;
+    VALUE values;
+
     switch (TYPE(val)) {
       case T_HASH:
            return rb_hash_strhash(val);    
@@ -290,9 +291,7 @@ rb_strhash_convert(VALUE hash, VALUE val)
 
 static VALUE
 rb_strhash_aset(VALUE hash, VALUE key, VALUE val){
-	VALUE converted = rb_strhash_convert(hash,val);
-	rb_hash_aset(hash, key, converted);
-	return converted;
+	return rb_hash_aset(hash, key, rb_strhash_convert(hash,val));
 }
 
 /* hash.c */
@@ -459,11 +458,21 @@ rb_hash_update(hash1, hash2)
     return hash1;
 }
 
+static int
+rb_strhash_to_hash_i(VALUE key, VALUE value, VALUE hash){
+    if (SYMBOL_P(key)){
+      rb_hash_delete(hash,key);
+      rb_hash_aset(hash, rb_obj_as_string(key), value);
+    }
+    return ST_CONTINUE;
+}
+
 static VALUE
 rb_strhash_to_hash(VALUE hash){
-	VALUE hsh = rb_hash_new();
+	VALUE hsh = rb_hash_update(rb_hash_new(), hash);
 	RHASH(hsh)->ifnone = RHASH(hash)->ifnone;
-	return rb_hash_update(hsh, hash);
+	rb_hash_foreach(hsh, rb_strhash_to_hash_i, hsh);
+	return hsh;
 }
 
 void
