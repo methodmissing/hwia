@@ -30,5 +30,9 @@ Benchmark.bmbm do |results|
   results.report("StrHash#[:sym]=") { TESTS.times { STR_HASH[:c] = :c } }
   results.report("HashWithIndifferentAccess#[:sym]=") { TESTS.times { HWIA_HASH[:c] = :c } }
   results.report("StrHash#update") { TESTS.times { STR_HASH.update(HASH) } }
-  results.report("HashWithIndifferentAccess#update") { TESTS.times { HWIA_HASH.update(HASH) } }  
+  results.report("HashWithIndifferentAccess#update") { TESTS.times { HWIA_HASH.update(HASH) } } 
+  results.report("StrHash#dup") { TESTS.times { STR_HASH.dup } }
+  results.report("HashWithIndifferentAccess#dup") { TESTS.times { HWIA_HASH.dup } }   
+  results.report("StrHash#merge") { TESTS.times { STR_HASH.merge(HASH) } }
+  results.report("HashWithIndifferentAccess#merge") { TESTS.times { HWIA_HASH.merge(HASH) } }
 end  
