@@ -31,6 +31,10 @@ class TestStrHash < Test::Unit::TestCase
     @fixnums = {  0  => 1,  1  => 2 }.strhash
   end
   
+  def test_inherits_hash
+    assert_equal Hash, StrHash.superclass
+  end  
+    
   def test_strhash
     assert_equal @strings.object_id, @strings.strhash.object_id
   end
@@ -68,10 +72,12 @@ class TestStrHash < Test::Unit::TestCase
     assert_not_equal @mixed.object_id, @mixed.dup.object_id
   end
   
-  def test_inherits_hash
-    assert_equal Hash, StrHash.superclass
-  end  
-  
+  def test_to_hash
+    assert_instance_of Hash, @strings.to_hash
+    assert_equal %w(a b), @strings.to_hash.keys
+    assert_equal( { 'a' => 1, 'b' => 2 }, @strings.to_hash )
+  end
+    
   def test_keys
     assert_equal ["a", "b"], @strings.keys
     assert_equal [:a, :b], @symbols.keys

@@ -183,6 +183,13 @@ static struct st_hash_type objstrhash = {
     rb_strhash_hash,
 };
 
+static void 
+rb_hash_modify_check(VALUE hash){
+    if (OBJ_FROZEN(hash)) rb_error_frozen("hash");
+    if (!OBJ_TAINTED(hash) && rb_safe_level() >= 4)
+	rb_raise(rb_eSecurityError, "Insecure: can't modify hash");
+}
+
 /* hash.c */
 static void
 rb_hash_modify(VALUE hash)
@@ -190,9 +197,7 @@ rb_hash_modify(VALUE hash)
 #ifdef RUBY18	
     if (!HASH_TBL(hash)) rb_raise(rb_eTypeError, "uninitialized Hash");
 #endif
-    if (OBJ_FROZEN(hash)) rb_error_frozen("hash");
-    if (!OBJ_TAINTED(hash) && rb_safe_level() >= 4)
-	rb_raise(rb_eSecurityError, "Insecure: can't modify hash");
+	rb_hash_modify_check(hash);
 #ifdef RUBY19
    if (!HASH_TBL(hash)) HASH_TBL(hash) = st_init_table(&objstrhash);
 #endif
@@ -241,7 +246,14 @@ static VALUE
 rb_strhash_rehash(VALUE hash)
 {
     st_table *tbl;
-
+#ifdef RUBY19
+    if (RHASH(hash)->iter_lev > 0) {
+	rb_raise(rb_eRuntimeError, "rehash during iteration");
+    }
+    rb_hash_modify_check(hash);
+    if (!RHASH(hash)->ntbl)
+        return hash;
+#endif
     rb_hash_modify(hash);
     tbl = st_init_table_with_size(&objstrhash, HASH_TBL(hash)->num_entries);
     rb_hash_foreach(hash, rb_hash_rehash_i, (st_data_t)tbl);
@@ -388,6 +400,72 @@ rb_strhash_merge(VALUE hash1, VALUE hash2){
 	return rb_strhash_update(hash1,hash2);
 }
 
+/*hash.c, see rb_strhash_to_hash*/
+static VALUE
+to_hash(hash)
+    VALUE hash;
+{
+    return rb_convert_type(hash, T_HASH, "Hash", "to_hash");
+}
+
+/*hash.c, see rb_strhash_to_hash*/
+static int
+rb_hash_update_i(key, value, hash)
+    VALUE key, value;
+    VALUE hash;
+{
+    if (key == Qundef) return ST_CONTINUE;
+#ifdef RUBY19
+    st_insert(RHASH(hash)->ntbl, key, value);
+#else
+    rb_hash_aset(hash, key, value);
+#endif
+    return ST_CONTINUE;
+}
+
+/*hash.c, see rb_strhash_to_hash*/
+static int
+rb_hash_update_block_i(key, value, hash)
+    VALUE key, value;
+    VALUE hash;
+{
+    if (key == Qundef) return ST_CONTINUE;
+    if (rb_hash_has_key(hash, key)) {
+	value = rb_yield_values(3, key, rb_hash_aref(hash, key), value);
+    }
+#ifdef RUBY19
+    st_insert(RHASH(hash)->ntbl, key, value);
+#else
+    rb_hash_aset(hash, key, value);
+#endif
+    return ST_CONTINUE;
+}
+
+/*hash.c, see rb_strhash_to_hash*/
+static VALUE
+rb_hash_update(hash1, hash2)
+    VALUE hash1, hash2;
+{
+#ifdef RUBY19
+    rb_hash_modify(hash1);
+#endif	
+    hash2 = to_hash(hash2);
+    if (rb_block_given_p()) {
+	rb_hash_foreach(hash2, rb_hash_update_block_i, hash1);
+    }
+    else {
+	rb_hash_foreach(hash2, rb_hash_update_i, hash1);
+    }
+    return hash1;
+}
+
+static VALUE
+rb_strhash_to_hash(VALUE hash){
+	VALUE hsh = rb_hash_new();
+	RHASH(hsh)->ifnone = RHASH(hash)->ifnone;
+	return rb_hash_update(hsh, hash);
+}
+
 void
 Init_hwia()
 {
@@ -415,5 +493,6 @@ Init_hwia()
     rb_define_method(rb_cStrHash, "update", rb_strhash_update, 1);
     rb_define_method(rb_cStrHash, "merge!", rb_strhash_update, 1);
     rb_define_method(rb_cStrHash, "merge", rb_strhash_merge, 1);
+    rb_define_method(rb_cStrHash, "to_hash", rb_strhash_to_hash, 0);
     rb_define_method(rb_cHash, "strhash", rb_hash_strhash, 0);
 }	
