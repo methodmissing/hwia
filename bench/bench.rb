@@ -35,4 +35,6 @@ Benchmark.bmbm do |results|
   results.report("HashWithIndifferentAccess#dup") { TESTS.times { HWIA_HASH.dup } }   
   results.report("StrHash#merge") { TESTS.times { STR_HASH.merge(HASH) } }
   results.report("HashWithIndifferentAccess#merge") { TESTS.times { HWIA_HASH.merge(HASH) } }
+  results.report("StrHash#to_hash") { TESTS.times { STR_HASH.to_hash } }
+  results.report("HashWithIndifferentAccess#to_hash") { TESTS.times { HWIA_HASH.to_hash } }
 end  

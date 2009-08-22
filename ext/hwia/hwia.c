@@ -263,6 +263,38 @@ rb_strhash_rehash(VALUE hash)
     return hash;
 }
 
+static VALUE rb_hash_strhash(VALUE hash);
+
+/* temp. public API */
+static VALUE
+rb_strhash_convert(VALUE hash, VALUE val)
+{
+	int i;
+	VALUE values;
+    switch (TYPE(val)) {
+      case T_HASH:
+           return rb_hash_strhash(val);    
+           break; 
+      case T_ARRAY:
+            values = rb_ary_new2(RARRAY_LEN(val));
+            for (i = 0; i < RARRAY_LEN(val); i++) {
+               VALUE el = RARRAY_PTR(val)[i];
+               rb_ary_push(values, (TYPE(el) == T_HASH) ? rb_hash_strhash(el) : el);
+            } 
+           return values;
+           break;
+      default:
+           return val;
+    }
+}
+
+static VALUE
+rb_strhash_aset(VALUE hash, VALUE key, VALUE val){
+	VALUE converted = rb_strhash_convert(hash,val);
+	rb_hash_aset(hash, key, converted);
+	return converted;
+}
+
 /* hash.c */
 static VALUE
 rb_strhash_s_create(int argc, VALUE *argv, VALUE klass)
@@ -284,7 +316,7 @@ rb_strhash_s_create(int argc, VALUE *argv, VALUE klass)
 
     hash = strhash_alloc(klass);
     for (i=0; i<argc; i+=2) {
-        rb_hash_aset(hash, argv[i], argv[i + 1]);
+        rb_strhash_aset(hash, argv[i], argv[i + 1]);
     }
 
     return hash;
@@ -304,36 +336,6 @@ rb_hash_strhash(VALUE hash)
 	return rb_strhash_s_create(1, (VALUE *)args, rb_cStrHash );
 }
 
-/* temp. public API */
-static VALUE
-rb_strhash_convert(VALUE hash, VALUE val)
-{
-	int i;
-	VALUE values;
-    switch (TYPE(val)) {
-      case T_HASH:
-           return rb_hash_strhash(val);    
-           break; 
-      case T_ARRAY:
-            values = rb_ary_new2(RARRAY_LEN(val));
-            for (i = 0; i < RARRAY_LEN(val); i++) {
-               VALUE el = RARRAY_PTR(val)[i];
-               rb_ary_push(values, (TYPE(el) == T_HASH) ? rb_hash_strhash(el) : el);
-            } 
-            return values;
-           break;
-      default:
-           return val;
-    }
-}
-
-static VALUE
-rb_strhash_aset(VALUE hash, VALUE key, VALUE val){
-	VALUE converted = rb_strhash_convert(hash,val);
-	rb_hash_aset(hash, key, converted);
-	return converted;
-}
-
 /* hash.c */
 static VALUE
 to_strhash(hash)
@@ -347,7 +349,7 @@ static int
 rb_strhash_update_i(VALUE key, VALUE value, VALUE hash)
 {
     if (key == Qundef) return ST_CONTINUE;
-    st_insert(HASH_TBL(hash), key, value);
+    st_insert(HASH_TBL(hash), key, rb_strhash_convert(hash,value));
     return ST_CONTINUE;
 }
 
@@ -359,7 +361,7 @@ rb_strhash_update_block_i(VALUE key, VALUE value, VALUE hash)
     if (rb_hash_has_key(hash, key)) {
 	value = rb_yield_values(3, key, rb_hash_aref(hash, key), value);
     }
-    st_insert(HASH_TBL(hash), key, value);
+    st_insert(HASH_TBL(hash), key, rb_strhash_convert(hash,value));
     return ST_CONTINUE;
 }
 
@@ -385,12 +387,10 @@ rb_strhash_initialize(int argc, VALUE *argv, VALUE hash){
 	VALUE constructor;
 	rb_scan_args(argc, argv, "01", &constructor);
 	if(TYPE(constructor) == T_HASH){
-		rb_strhash_update(hash,constructor);
-		rb_call_super(argc,argv);
+		return rb_strhash_update(hash,constructor);
 	}else{
-		rb_call_super(argc,argv);
-	}
-	return hash;		
+		return rb_call_super(argc,argv);
+	}		
 }
 
 static VALUE

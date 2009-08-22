@@ -57,6 +57,8 @@ class TestStrHash < Test::Unit::TestCase
     assert_instance_of StrHash, @strings.convert(array_with_hash).shift   
     assert_equal [:a,:b,:c], @strings.convert(array_with_hash).pop 
     assert_instance_of StrHash, @strings.convert({ 'a' => 1, 'b' => 2 })
+    hash = { "urls" => { "url" => [ { "address" => "1" }, { "address" => "2" } ] }}
+    assert_instance_of Array, @strings.convert(hash)[:urls][:url] 
   end
   
   def test_set
@@ -225,13 +227,13 @@ class TestStrHash < Test::Unit::TestCase
     assert_equal hash.delete('a'), nil
   end  
 
-=begin
+=begin 
   def test_hash_with_array_of_hashes
     hash = { "urls" => { "url" => [ { "address" => "1" }, { "address" => "2" } ] }}
     hwia = StrHash[hash]
     assert_equal "1", hwia[:urls][:url].first[:address]
   end
-        
+       
   def test_indifferent_subhashes
     h = {'user' => {'id' => 5}}.with_indifferent_access
     ['user', :user].each {|user| [:id, 'id'].each {|id| assert_equal 5, h[user][id], "h[#{user.inspect}][#{id.inspect}] should be 5"}}
