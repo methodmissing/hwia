@@ -290,7 +290,9 @@ rb_strhash_convert(VALUE hash, VALUE val)
 
 static VALUE
 rb_strhash_aset(VALUE hash, VALUE key, VALUE val){
-	return rb_hash_aset(hash, key, rb_strhash_convert(hash,val));
+	VALUE converted = rb_strhash_convert(hash,val);
+	rb_hash_aset(hash, key, converted);
+    return converted;
 }
 
 /* hash.c */

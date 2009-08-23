@@ -66,6 +66,7 @@ class TestStrHash < Test::Unit::TestCase
     array = [{ 'a' => 1, 'b' => 2 }, [:a,:b,:c]]
     @strings[:array] = array
     assert_instance_of StrHash, @strings[:array].shift
+    assert_instance_of Array, @strings[:array] = array    
     assert_instance_of StrHash, @strings[:hash] = { 'a' => 1, 'b' => 2 }
   end
   
