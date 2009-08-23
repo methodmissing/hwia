@@ -152,8 +152,8 @@ rb_strhash_hash(VALUE a)
 	return (int)a;  
 #else
     hnum = a;
-#endif	  
 	break;
+#endif	  
       case T_SYMBOL:
 	hnum = rb_sym_strhash_m(a);
 	break;
@@ -233,11 +233,14 @@ rb_strhash_new()
     return strhash_alloc(rb_cStrHash);
 }
 
+static VALUE rb_hash_strhash(VALUE hash);
+static VALUE rb_strhash_convert(VALUE hash, VALUE value);
+
 /* hash.c */
 static int
 rb_hash_rehash_i(VALUE key, VALUE value, st_table *tbl)
 {
-    if (key != Qundef) st_insert(tbl, key, value);
+    if (key != Qundef) st_insert(tbl, key, rb_strhash_convert(Qnil, value));
     return ST_CONTINUE;
 }
 
@@ -263,8 +266,6 @@ rb_strhash_rehash(VALUE hash)
     return hash;
 }
 
-static VALUE rb_hash_strhash(VALUE hash);
-
 /* temp. public API */
 static VALUE
 rb_strhash_convert(VALUE hash, VALUE val)
@@ -275,7 +276,6 @@ rb_strhash_convert(VALUE hash, VALUE val)
     switch (TYPE(val)) {
       case T_HASH:
            return rb_hash_strhash(val);    
-           break; 
       case T_ARRAY:
             values = rb_ary_new2(RARRAY_LEN(val));
             for (i = 0; i < RARRAY_LEN(val); i++) {
@@ -283,7 +283,6 @@ rb_strhash_convert(VALUE hash, VALUE val)
                rb_ary_push(values, (TYPE(el) == T_HASH) ? rb_hash_strhash(el) : el);
             } 
            return values;
-           break;
       default:
            return val;
     }
@@ -332,7 +331,7 @@ rb_hash_strhash(VALUE hash)
 {
 	VALUE args[1];
 	args[0] = hash;
-	return rb_strhash_s_create(1, (VALUE *)args, rb_cStrHash );
+	return rb_strhash_s_create(1, (VALUE *)args, rb_cStrHash);
 }
 
 /* hash.c */
