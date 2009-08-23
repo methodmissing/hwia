@@ -79,6 +79,22 @@ rb_strhash_cmp(VALUE s1,VALUE s2)
 }
 
 /* hash.c */
+static VALUE
+rb_hash_has_key(hash, key)
+    VALUE hash;
+    VALUE key;
+{
+#ifdef RUBY19
+    if (!RHASH(hash)->ntbl)
+        return Qfalse;
+#endif
+    if (st_lookup(HASH_TBL(hash), key, 0)) {
+    return Qtrue;
+    }
+    return Qfalse;
+}
+
+/* hash.c */
 #ifdef RUBY18
 static VALUE
 eql(VALUE *args)
