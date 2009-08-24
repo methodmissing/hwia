@@ -161,7 +161,6 @@ static int
 rb_strhash_hash(VALUE a)
 {
     VALUE hval, hnum;
-
     switch (TYPE(a)) {
       case T_FIXNUM:
 #ifdef RUBY18

@@ -1,4 +1,93 @@
 Attempt at a zippier HashWithIndifferentAccess for Ruby MRI
   (c) 2009 Lourens Naudé (methodmissing), James Tucker (raggi)
 
-Work in progress
+  http://github.com/methodmissing/hwia
+
+This library works with Ruby MRI > 1.8.6 && 1.9.2 and is a more efficient implementation of
+ActiveSupport::HashWithIndifferentAccess, which allows interchangeable use of string and symbol
+hash keys.
+
+The numbers ?
+
+  methodmissing:hwia lourens$ rake bench
+  (in /Users/lourens/projects/hwia)
+  /opt/local/bin/ruby extconf.rb
+  checking for rb_thread_blocking_region()... no
+  checking for rb_trap_immediate in ruby.h,rubysig.h... yes
+  creating Makefile
+  make
+  gcc -I. -I. -I/opt/local/lib/ruby/1.8/i686-darwin9.5.1 -I. -DHAVE_RB_TRAP_IMMEDIATE -DRUBY18    -D_XOPEN_SOURCE -D_DARWIN_C_SOURCE   -fno-common -O2 -pipe -fno-common   -c hwia.c
+  cc -dynamic -bundle -undefined suppress -flat_namespace -o hwia.bundle hwia.o -L. -L/opt/local/lib -L.     -ldl -lobjc  
+  /opt/local/bin/ruby bench/bench.rb
+  Rehearsal ------------------------------------------------------------------------------
+  StrHash#[:sym]                               0.000000   0.000000   0.000000 (  0.002999)
+  HashWithIndifferentAccess#[:sym]             0.020000   0.000000   0.020000 (  0.021942)
+  StrHash#['str']                              0.010000   0.000000   0.010000 (  0.004590)
+  HashWithIndifferentAccess#['str]             0.000000   0.000000   0.000000 (  0.003842)
+  StrHash#key?(:sym)                           0.010000   0.000000   0.010000 (  0.002902)
+  HashWithIndifferentAccess#key?(:sym)         0.010000   0.000000   0.010000 (  0.013906)
+  StrHash#key?('str')                          0.000000   0.000000   0.000000 (  0.004245)
+  HashWithIndifferentAccess#key?('str')        0.010000   0.000000   0.010000 (  0.010769)
+  StrHash#fetch(:sym)                          0.010000   0.000000   0.010000 (  0.003285)
+  HashWithIndifferentAccess#fetch(:sym)        0.020000   0.000000   0.020000 (  0.019375)
+  StrHash#fetch('str')                         0.000000   0.000000   0.000000 (  0.003811)
+  HashWithIndifferentAccess#fetch('str')       0.010000   0.000000   0.010000 (  0.014550)
+  StrHash#values_at(:sym)                      0.010000   0.000000   0.010000 (  0.006830)
+  HashWithIndifferentAccess#values_at(:sym)    0.020000   0.000000   0.020000 (  0.020391)
+  StrHash#values_at('str')                     0.010000   0.000000   0.010000 (  0.007286)
+  HashWithIndifferentAccess#values_at('str')   0.020000   0.000000   0.020000 (  0.019495)
+  StrHash#['str']=                             0.000000   0.000000   0.000000 (  0.004249)
+  HashWithIndifferentAccess#['str]=            0.020000   0.000000   0.020000 (  0.017406)
+  StrHash#[:sym]=                              0.000000   0.000000   0.000000 (  0.003898)
+  HashWithIndifferentAccess#[:sym]=            0.020000   0.000000   0.020000 (  0.020366)
+  StrHash#update                               0.010000   0.000000   0.010000 (  0.005549)
+  HashWithIndifferentAccess#update             0.050000   0.000000   0.050000 (  0.058935)
+  StrHash#dup                                  0.030000   0.000000   0.030000 (  0.029752)
+  HashWithIndifferentAccess#dup                0.120000   0.000000   0.120000 (  0.128600)
+  StrHash#merge                                0.030000   0.000000   0.030000 (  0.027572)
+  HashWithIndifferentAccess#merge              0.180000   0.000000   0.180000 (  0.179814)
+  StrHash#to_hash                              0.030000   0.000000   0.030000 (  0.034352)
+  HashWithIndifferentAccess#to_hash            0.040000   0.000000   0.040000 (  0.038520)
+  --------------------------------------------------------------------- total: 0.690000sec
+
+                                                   user     system      total        real
+  StrHash#[:sym]                               0.010000   0.000000   0.010000 (  0.003005)
+  HashWithIndifferentAccess#[:sym]             0.020000   0.000000   0.020000 (  0.020551)
+  StrHash#['str']                              0.000000   0.000000   0.000000 (  0.003312)
+  HashWithIndifferentAccess#['str]             0.000000   0.000000   0.000000 (  0.003213)
+  StrHash#key?(:sym)                           0.000000   0.000000   0.000000 (  0.002851)
+  HashWithIndifferentAccess#key?(:sym)         0.010000   0.000000   0.010000 (  0.012139)
+  StrHash#key?('str')                          0.010000   0.000000   0.010000 (  0.003496)
+  HashWithIndifferentAccess#key?('str')        0.010000   0.000000   0.010000 (  0.009912)
+  StrHash#fetch(:sym)                          0.000000   0.000000   0.000000 (  0.003172)
+  HashWithIndifferentAccess#fetch(:sym)        0.020000   0.000000   0.020000 (  0.017662)
+  StrHash#fetch('str')                         0.000000   0.000000   0.000000 (  0.003850)
+  HashWithIndifferentAccess#fetch('str')       0.020000   0.000000   0.020000 (  0.014771)
+  StrHash#values_at(:sym)                      0.000000   0.000000   0.000000 (  0.004340)
+  HashWithIndifferentAccess#values_at(:sym)    0.030000   0.000000   0.030000 (  0.020821)
+  StrHash#values_at('str')                     0.000000   0.000000   0.000000 (  0.004842)
+  HashWithIndifferentAccess#values_at('str')   0.020000   0.000000   0.020000 (  0.017479)
+  StrHash#['str']=                             0.010000   0.000000   0.010000 (  0.004225)
+  HashWithIndifferentAccess#['str]=            0.010000   0.000000   0.010000 (  0.018206)
+  StrHash#[:sym]=                              0.010000   0.000000   0.010000 (  0.003825)
+  HashWithIndifferentAccess#[:sym]=            0.020000   0.000000   0.020000 (  0.019323)
+  StrHash#update                               0.000000   0.000000   0.000000 (  0.005478)
+  HashWithIndifferentAccess#update             0.050000   0.000000   0.050000 (  0.048082)
+  StrHash#dup                                  0.030000   0.000000   0.030000 (  0.023855)
+  HashWithIndifferentAccess#dup                0.110000   0.000000   0.110000 (  0.120992)
+  StrHash#merge                                0.030000   0.000000   0.030000 (  0.027412)
+  HashWithIndifferentAccess#merge              0.180000   0.000000   0.180000 (  0.173209)
+  StrHash#to_hash                              0.030000   0.000000   0.030000 (  0.034561)
+  HashWithIndifferentAccess#to_hash            0.030000   0.000000   0.030000 (  0.025392)
+
+Installation
+
+  1. sudo gem install methodmissing-hwia
+  2. 'require "hwia_rails"' from within an initializer
+  
+  There's no step three, however, if the gem hasn't built due to github queue delays today (22/08/2009), clone, 'rake gem' and install.
+
+It's unlikely you'd see these improvements for most apps as at the framework level, especially for Rails 3.0, 
+this mostly negates query params access overheads.Any pointers and refactoring suggestions much appreciated.
+
+Have fun, happy hacking! 

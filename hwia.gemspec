@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name     = "hwia"
-  s.version  = "1.0.0"
+  s.version  = "1.0.1"
   s.date     = "2009-08-23"
   s.summary  = "A faster HashWithIndifferentAccess (hwia) for MRI"
   s.email    = "lourens@methodmissing.com"
