@@ -66,3 +66,8 @@ task :bench do
   ruby "bench/bench.rb"
 end
 task :bench => :build
+
+desc "build gem"
+task :gem do
+  sh "gem build hwia.gemspec"
+end

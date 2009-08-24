@@ -6,10 +6,15 @@ class Hash
 end
 
 class StrHash
-  alias convert_key convert  
   def stringify_keys!; self end
   def symbolize_keys!; self end
-  def to_options!; self end  
+  def to_options!; self end
+  
+  protected
+  # AS test suite compat only
+  def convert_key(key)
+    key.kind_of?(Symbol) ? key.to_s : key
+  end  
 end
 
 begin
