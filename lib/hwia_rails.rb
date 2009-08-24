@@ -17,7 +17,10 @@ class StrHash
   end  
 end
 
-silence_warnings do
- ActiveSupport::HashWithIndifferentAccess = StrHash
- HashWithIndifferentAccess = ActiveSupport::HashWithIndifferentAccess
+begin
+  old, $VERBOSE = $VERBOSE, nil
+  ActiveSupport::HashWithIndifferentAccess = StrHash
+  HashWithIndifferentAccess = ActiveSupport::HashWithIndifferentAccess
+ensure
+  $VERBOSE = old
 end
