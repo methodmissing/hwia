@@ -118,7 +118,7 @@ rb_strhash_hash_cmp(VALUE a, VALUE b)
 	TYPE(b) == T_STRING && RBASIC(b)->klass == rb_cString) {
 	return rb_str_cmp(a, b);
     }
-    if ((TYPE(a) == T_STRING && RBASIC(a)->klass == rb_cString && SYMBOL_P(b)) || (TYPE(b) == T_STRING && RBASIC(b)->klass == rb_cString && SYMBOL_P(a))) {
+    if (SYMBOL_P(b) && (TYPE(a) == T_STRING && RBASIC(a)->klass == rb_cString) || (SYMBOL_P(a) && TYPE(b) == T_STRING && RBASIC(b)->klass == rb_cString)) {
 	return rb_strhash_cmp(a, b);
     }
     if (a == Qundef || b == Qundef) return -1;

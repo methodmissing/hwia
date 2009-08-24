@@ -6,6 +6,7 @@ class Hash
 end
 
 class StrHash
+  alias convert_key convert  
   def stringify_keys!; self end
   def symbolize_keys!; self end
   def to_options!; self end  
