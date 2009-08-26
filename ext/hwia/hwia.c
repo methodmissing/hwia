@@ -142,7 +142,7 @@ rb_strhash_hash(VALUE a)
 #ifdef RUBY18
 	return (int)a;  
 #else
-    hnum = int(a);
+    hnum = (int)a;
 	break;
 #endif	  
       case T_SYMBOL:
