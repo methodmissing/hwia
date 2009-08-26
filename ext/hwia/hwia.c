@@ -134,21 +134,22 @@ rb_strhash_hash_cmp(VALUE a, VALUE b)
 static int
 rb_strhash_hash(VALUE a)
 {
-    VALUE hval, hnum;
-   
+    VALUE hval;
+	int hnum;  
+
     switch (TYPE(a)) {
       case T_FIXNUM:
 #ifdef RUBY18
 	return (int)a;  
 #else
-    hnum = a;
+    hnum = int(a);
 	break;
 #endif	  
       case T_SYMBOL:
-	hnum = rb_sym_strhash_m(a);
+	hnum = rb_sym_strhash(&a);
 	break;
       case T_STRING:
-	hnum = rb_str_strhash_m(a);
+	hnum = rb_str_strhash(&a);
 	break;
 
       default:
@@ -158,13 +159,13 @@ rb_strhash_hash(VALUE a)
 	    hval = rb_funcall(hval, '%', 1, hash_format);
 	}
 #endif	
-	hnum = FIX2LONG(hval);
+	hnum = (int)hval;
     }
 #ifdef RUBY18
-    return (int)hnum;
+    return hnum;
 #else
     hnum <<= 1;
-    return (int)RSHIFT(hnum, 1);
+    return RSHIFT(hnum, 1);
 #endif
 }
 
