@@ -49,17 +49,21 @@ class TestStrHash < Test::Unit::TestCase
   end
   
   def test_convert
-    assert_equal 'a', @strings.convert('a')
+    assert_equal 'a', @strings['a'] = 'a'
     hash = { 'a' => 1, 'b' => 2 }
-    assert_instance_of StrHash, @strings.convert(hash)
-    assert_equal %w(a b), @strings.convert(hash).keys
-    assert_equal [:a,:b,:c], @strings.convert([:a,:b,:c])
+    @strings[:str_hash] = hash
+    assert_instance_of StrHash, @strings[:str_hash] 
+    assert_equal %w(a b), @strings[:str_hash].keys
+    assert_equal [:a,:b,:c], @strings[:array] = [:a,:b,:c]
     array_with_hash = [{ 'a' => 1, 'b' => 2 }, [:a,:b,:c]]
-    assert_instance_of StrHash, @strings.convert(array_with_hash).shift   
-    assert_equal [:a,:b,:c], @strings.convert(array_with_hash).pop 
-    assert_instance_of StrHash, @strings.convert({ 'a' => 1, 'b' => 2 })
-    hash = { "urls" => { "url" => [ { "address" => "1" }, { "address" => "2" } ] }}
-    assert_instance_of Array, @strings.convert(hash)[:urls][:url] 
+    @strings[:array_with_hash] = array_with_hash
+    assert_instance_of StrHash, @strings[:array_with_hash].shift   
+    assert_equal [:a,:b,:c], @strings[:array_with_hash].pop 
+    @strings[:other_hash] = { 'a' => 1, 'b' => 2 }
+    assert_instance_of StrHash, @strings[:other_hash]
+    nested_hash = { "urls" => { "url" => [ { "address" => "1" }, { "address" => "2" } ] }}
+    @strings[:nested_hash] = nested_hash
+    assert_instance_of Array, @strings[:nested_hash][:urls][:url] 
   end
   
   def test_set
