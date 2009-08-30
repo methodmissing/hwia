@@ -38,7 +38,7 @@ strhash(register const char *string)
     register int c;
     register int val = 0;
     while ((c = *string++) != '\0') {
-	  val = val*997 + c;
+    val = val*997 + c;
     }
     return val + (val>>5);
 }
@@ -46,7 +46,7 @@ strhash(register const char *string)
 int
 rb_sym_strhash(VALUE *sym)
 {
-	ID id = SYM2ID(*sym);
+    ID id = SYM2ID(*sym);
     return strhash((char*)rb_id2name(id));
 }
 
@@ -71,11 +71,11 @@ rb_str_strhash_m(VALUE str)
 int
 rb_strhash_cmp(VALUE *s1,VALUE *s2)
 {
-	int s1_hash = SYMBOL_P(*s1) ? rb_sym_strhash(s1) : rb_str_strhash(s1);
-	int s2_hash = SYMBOL_P(*s2) ? rb_sym_strhash(s2) : rb_str_strhash(s2);
-	if (s1_hash == s2_hash) return 0;
-	if (s1_hash > s2_hash) return 1;
-	return -1;	
+    int s1_hash = SYMBOL_P(*s1) ? rb_sym_strhash(s1) : rb_str_strhash(s1);
+    int s2_hash = SYMBOL_P(*s2) ? rb_sym_strhash(s2) : rb_str_strhash(s2);
+    if (s1_hash == s2_hash) return 0;
+    if (s1_hash > s2_hash) return 1;
+    return -1;	
 }
 
 /* hash.c */
@@ -115,11 +115,11 @@ rb_strhash_hash_cmp(VALUE a, VALUE b)
     if (a == Qundef || b == Qundef) return -1;
     if (SYMBOL_P(a) && SYMBOL_P(b)) return a != b;
     if ((TYPE(a) == T_STRING && RBASIC(a)->klass == rb_cString && SYMBOL_P(b)) || (TYPE(b) == T_STRING && RBASIC(b)->klass == rb_cString && SYMBOL_P(a))) {
-	return rb_strhash_cmp(&a, &b);
+    return rb_strhash_cmp(&a, &b);
     }
     if (TYPE(a) == T_STRING && RBASIC(a)->klass == rb_cString &&
-	TYPE(b) == T_STRING && RBASIC(b)->klass == rb_cString) {
-	return rb_str_cmp(a, b);
+    TYPE(b) == T_STRING && RBASIC(b)->klass == rb_cString) {
+    return rb_str_cmp(a, b);
     }
 #ifdef RUBY18
     args[0] = a;
@@ -135,7 +135,7 @@ static int
 rb_strhash_hash(VALUE a)
 {
     VALUE hval;
-	int hnum;  
+    int hnum;  
 
     switch (TYPE(a)) {
       case T_FIXNUM:
@@ -143,23 +143,23 @@ rb_strhash_hash(VALUE a)
 	return (int)a;  
 #else
     hnum = (int)a;
-	break;
+    break;
 #endif	  
       case T_SYMBOL:
-	hnum = rb_sym_strhash(&a);
-	break;
+    hnum = rb_sym_strhash(&a);
+    break;
       case T_STRING:
-	hnum = rb_str_strhash(&a);
-	break;
+    hnum = rb_str_strhash(&a);
+    break;
 
       default:
-	hval = rb_hash(a);
+    hval = rb_hash(a);
 #ifdef RUBY18
-	if (!FIXNUM_P(hval)) {
-	    hval = rb_funcall(hval, '%', 1, hash_format);
-	}
+    if (!FIXNUM_P(hval)) {
+       hval = rb_funcall(hval, '%', 1, hash_format);
+    }
 #endif	
-	hnum = (int)hval;
+    hnum = (int)hval;
     }
 #ifdef RUBY18
     return hnum;
@@ -178,7 +178,7 @@ static void
 rb_hash_modify_check(VALUE *hash){
     if (OBJ_FROZEN(*hash)) rb_error_frozen("hash");
     if (!OBJ_TAINTED(*hash) && rb_safe_level() >= 4)
-	rb_raise(rb_eSecurityError, "Insecure: can't modify hash");
+    rb_raise(rb_eSecurityError, "Insecure: can't modify hash");
 }
 
 /* hash.c */
@@ -188,7 +188,7 @@ rb_hash_modify(VALUE hash)
 #ifdef RUBY18	
     if (!HASH_TBL(hash)) rb_raise(rb_eTypeError, "uninitialized Hash");
 #endif
-	rb_hash_modify_check(&hash);
+    rb_hash_modify_check(&hash);
 #ifdef RUBY19
    if (!HASH_TBL(hash)) HASH_TBL(hash) = st_init_table(&objstrhash);
 #endif
@@ -226,7 +226,7 @@ static int
 rb_hash_rehash_i(VALUE key, VALUE value, st_table *tbl)
 {
     if (key != Qundef){ 
-	  rb_strhash_convert(&value);
+      rb_strhash_convert(&value);
       st_insert(tbl, key, value);
     }
     return ST_CONTINUE;
@@ -239,7 +239,7 @@ rb_strhash_rehash(VALUE hash)
     st_table *tbl;
 #ifdef RUBY19
     if (RHASH(hash)->iter_lev > 0) {
-	rb_raise(rb_eRuntimeError, "rehash during iteration");
+    rb_raise(rb_eRuntimeError, "rehash during iteration");
     }
     rb_hash_modify_check(&hash);
     if (!RHASH(hash)->ntbl)
@@ -270,15 +270,15 @@ rb_strhash_convert(VALUE *val)
                VALUE el = RARRAY_PTR(*val)[i];
                rb_ary_push(values, (TYPE(el) == T_HASH) ? rb_hash_strhash(el) : el);
             } 
-		    *val = values;
-		   break;
+           *val = values;
+           break;
     }
 }
 
 static VALUE
 rb_strhash_aset(VALUE hash, VALUE key, VALUE val){
-	rb_strhash_convert(&val);
-	rb_hash_aset(hash, key, val);
+    rb_strhash_convert(&val);
+    rb_hash_aset(hash, key, val);
     return val;
 }
 
@@ -290,15 +290,15 @@ rb_strhash_s_create(int argc, VALUE *argv, VALUE klass)
     int i;
 
     if (argc == 1 && TYPE(argv[0]) == T_HASH) {
-	hash = strhash_alloc0(&klass);
-	HASH_TBL(hash) = st_copy(HASH_TBL(argv[0]));
-	HASH_TBL(hash)->type = &objstrhash;
-	RHASH(hash)->ifnone = RHASH(argv[0])->ifnone;
-	return rb_strhash_rehash(hash);
+    hash = strhash_alloc0(&klass);
+    HASH_TBL(hash) = st_copy(HASH_TBL(argv[0]));
+    HASH_TBL(hash)->type = &objstrhash;
+    RHASH(hash)->ifnone = RHASH(argv[0])->ifnone;
+    return rb_strhash_rehash(hash);
     }
 
     if (argc % 2 != 0) {
-	rb_raise(rb_eArgError, "odd number of arguments for Hash");
+    rb_raise(rb_eArgError, "odd number of arguments for Hash");
     }
 
     hash = strhash_alloc(klass);
@@ -312,15 +312,15 @@ rb_strhash_s_create(int argc, VALUE *argv, VALUE klass)
 static VALUE
 rb_strhash_strhash(VALUE hash)
 {
-	return hash;
+    return hash;
 }
 
 static VALUE
 rb_hash_strhash(VALUE hash)
 {
-	VALUE args[1];
-	args[0] = hash;
-	return rb_strhash_s_create(1, (VALUE *)args, rb_cStrHash);
+    VALUE args[1];
+    args[0] = hash;
+    return rb_strhash_s_create(1, (VALUE *)args, rb_cStrHash);
 }
 
 /* hash.c */
@@ -336,7 +336,7 @@ static int
 rb_strhash_update_i(VALUE key, VALUE value, VALUE *hash)
 {
     if (key == Qundef) return ST_CONTINUE;
-	rb_strhash_convert(&value);
+    rb_strhash_convert(&value);
     st_insert(HASH_TBL(*hash), key, value);
     return ST_CONTINUE;
 }
@@ -347,9 +347,9 @@ rb_strhash_update_block_i(VALUE key, VALUE value, VALUE *hash)
 {
     if (key == Qundef) return ST_CONTINUE;
     if (rb_hash_has_key(*hash, key)) {
-	value = rb_yield_values(3, key, rb_hash_aref(*hash, key), value);
+    value = rb_yield_values(3, key, rb_hash_aref(*hash, key), value);
     }
-	rb_strhash_convert(&value);
+    rb_strhash_convert(&value);
     st_insert(HASH_TBL(*hash), key, value);
     return ST_CONTINUE;
 }
@@ -359,33 +359,33 @@ static VALUE
 rb_strhash_update(VALUE hash1, VALUE hash2)
 {
 #ifdef RUBY19	
-	rb_hash_modify(hash1);
+    rb_hash_modify(hash1);
 #endif
     hash2 = to_strhash(hash2);
     if (rb_block_given_p()) {
-	rb_hash_foreach(hash2, rb_strhash_update_block_i, &hash1);
+    rb_hash_foreach(hash2, rb_strhash_update_block_i, &hash1);
     }
     else {
-	rb_hash_foreach(hash2, rb_strhash_update_i, &hash1);
+    rb_hash_foreach(hash2, rb_strhash_update_i, &hash1);
     }
     return hash1;
 }
 
 static VALUE
 rb_strhash_initialize(int argc, VALUE *argv, VALUE hash){
-	VALUE constructor;
-	rb_scan_args(argc, argv, "01", &constructor);
-	if(TYPE(constructor) == T_HASH){
-		return rb_strhash_update(hash,constructor);
-	}else{
-		return rb_call_super(argc,argv);
-	}		
+    VALUE constructor;
+    rb_scan_args(argc, argv, "01", &constructor);
+    if(TYPE(constructor) == T_HASH){
+      return rb_strhash_update(hash,constructor);
+    }else{
+      return rb_call_super(argc,argv);
+    }
 }
 
 static VALUE
 rb_strhash_merge(VALUE hash1, VALUE hash2){
-	/* see note in Init */
-	return rb_strhash_update(hash1,hash2);
+    /* see note in Init */
+   return rb_strhash_update(hash1,hash2);
 }
 
 /*hash.c, see rb_strhash_to_hash*/
@@ -419,7 +419,7 @@ rb_hash_update_block_i(key, value, hash)
 {
     if (key == Qundef) return ST_CONTINUE;
     if (rb_hash_has_key(*hash, key)) {
-	value = rb_yield_values(3, key, rb_hash_aref(*hash, key), value);
+    value = rb_yield_values(3, key, rb_hash_aref(*hash, key), value);
     }
 #ifdef RUBY19
     st_insert(RHASH(*hash)->ntbl, key, value);
@@ -439,10 +439,10 @@ rb_hash_update(hash1, hash2)
 #endif	
     hash2 = to_hash(hash2);
     if (rb_block_given_p()) {
-	rb_hash_foreach(hash2, rb_hash_update_block_i, &hash1);
+    rb_hash_foreach(hash2, rb_hash_update_block_i, &hash1);
     }
     else {
-	rb_hash_foreach(hash2, rb_hash_update_i, &hash1);
+    rb_hash_foreach(hash2, rb_hash_update_i, &hash1);
     }
     return hash1;
 }
@@ -451,8 +451,8 @@ static int
 rb_strhash_to_hash_i(VALUE key, VALUE value, VALUE *hash){
     if (SYMBOL_P(key)){
       rb_hash_delete(*hash,key);
-	  VALUE str = rb_str_new2(rb_id2name(SYM2ID(key)));
-	  OBJ_FREEZE(str);
+      VALUE str = rb_str_new2(rb_id2name(SYM2ID(key)));
+      OBJ_FREEZE(str);
       rb_hash_aset(*hash, str, value);
     }
     return ST_CONTINUE;
@@ -460,10 +460,10 @@ rb_strhash_to_hash_i(VALUE key, VALUE value, VALUE *hash){
 
 static VALUE
 rb_strhash_to_hash(VALUE hash){
-	VALUE hsh = rb_hash_update(rb_hash_new(), hash);
-	RHASH(hsh)->ifnone = RHASH(hash)->ifnone;
-	rb_hash_foreach(hsh, rb_strhash_to_hash_i, &hsh);
-	return hsh;
+    VALUE hsh = rb_hash_update(rb_hash_new(), hash);
+    RHASH(hsh)->ifnone = RHASH(hash)->ifnone;
+    rb_hash_foreach(hsh, rb_strhash_to_hash_i, &hsh);
+    return hsh;
 }
 
 void
@@ -471,7 +471,7 @@ Init_hwia()
 {
     id_hash = rb_intern("hash");
     id_strhash = rb_intern("strhash");
-	hash_format = INT2FIX(536870923);
+    hash_format = INT2FIX(536870923);
 
     rb_cStrHash = rb_define_class("StrHash", rb_cHash);
 
@@ -494,4 +494,4 @@ Init_hwia()
     rb_define_method(rb_cStrHash, "merge", rb_strhash_merge, 1);
     rb_define_method(rb_cStrHash, "to_hash", rb_strhash_to_hash, 0);
     rb_define_method(rb_cHash, "strhash", rb_hash_strhash, 0);
-}	
+}
